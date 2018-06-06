@@ -14,7 +14,7 @@ public class MovieListResult {
     public int vote_count;
     public String release_date;
 
-    private JSONObject mJSONObject;
+    private final JSONObject mJSONObject;
 
     public MovieListResult(JSONObject jsonObject) {
         mJSONObject = jsonObject;

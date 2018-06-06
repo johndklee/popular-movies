@@ -1,10 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
+    // cannot change to 28 due to picasso lib containing 27.1.0 stuff
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.example.android.popularmovies"
         minSdkVersion 17
+        // cannot change to 28 due to picasso lib containing 27.1.0 stuff
+        //noinspection OldTargetApi
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"

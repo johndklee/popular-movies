@@ -176,7 +176,7 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
                     .placeholder(R.drawable.user_placeholder)
                     .error(R.drawable.user_placeholder_error)
                     .resize(targetWidth, targetHeight)
-                    .into(holder.imageView);
+                    .into(holder.getImageView());
         }
     }
 

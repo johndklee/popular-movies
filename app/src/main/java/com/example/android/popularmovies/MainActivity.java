@@ -115,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
      * @see #onPrepareOptionsMenu
      * @see #onOptionsItemSelected
      */
+    @SuppressWarnings("SameReturnValue")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
@@ -132,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
      *
      * @return true if you handle the menu click here, false otherwise
      */
+    @SuppressWarnings("SameReturnValue")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 

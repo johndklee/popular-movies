@@ -1,5 +1,5 @@
 package com.example.android.popularmovies;
 
-public interface MovieAdapterOnClickHandler {
+interface MovieAdapterOnClickHandler {
     void onClick(int position);
 }

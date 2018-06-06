@@ -11,14 +11,18 @@ import android.widget.ImageView;
  * OnClickListener, since it has access to the adapter and the views.
  */
 class MoviesAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-    final MovieAdapterOnClickHandler mClickHandler;
-    final ImageView imageView;
+    private final MovieAdapterOnClickHandler mClickHandler;
+    private final ImageView mImageView;
 
     MoviesAdapterViewHolder(View view, MovieAdapterOnClickHandler clickHandler) {
         super(view);
         mClickHandler = clickHandler;
-        imageView = view.findViewById(R.id.movie_image_view);
+        mImageView = view.findViewById(R.id.movie_image_view);
         view.setOnClickListener(this);
+    }
+
+    public ImageView getImageView() {
+        return mImageView;
     }
 
     @Override

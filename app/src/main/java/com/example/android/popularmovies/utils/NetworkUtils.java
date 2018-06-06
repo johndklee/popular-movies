@@ -177,7 +177,7 @@ public class NetworkUtils {
     /**
      * Check whether the device has network access
      *
-     * @param context
+     * @param context Context
      * @return true if the device has network access
      */
     public static boolean isOnline(Context context) {
