@@ -8,5 +8,5 @@ https://developers.themoviedb.org/3/getting-started/introduction
 Your global gradle.properies file can be found typically in <your home directory>/.gradle/ directory.
 The content of the file should inlude:
  
-PopularMoviesApp_ApiKey=<your API key>
+PopularMoviesApp_ApiKey=[place your own API key]
 
