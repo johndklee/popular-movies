@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_item_sort_by_popularity"
+        android:title="@string/sort_by_popularity_title" />
+
+    <item
+        android:id="@+id/menu_item_sort_by_rating"
+        android:title="@string/sort_by_rating_title" />
+
+    <item
+        android:id="@+id/menu_item_show_my_favorites"
+        android:title="@string/show_my_favorites" />
+
+</menu>

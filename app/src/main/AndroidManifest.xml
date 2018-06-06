@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.popularmovies">
+
+    <!--
+    This permission is necessary in order for Popular Movie to check network status
+    and perform API access.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name="com.example.android.popularmovies.MainActivity"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter android:label="@string/filter_app_name">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "http://www.example.com/popularmovies” -->
+                <data android:scheme="http"
+                    android:host="www.example.com"
+                    android:pathPrefix="/popular_movies" />
+                <!-- note that the leading "/" is required for pathPrefix-->
+                <!-- Accepts URIs that begin with "example://popularmovies” -->
+                <data android:scheme="example"
+                    android:host="popular_movies" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:parentActivityName="com.example.android.popularmovies.MainActivity"
+            android:name="com.example.android.popularmovies.MovieDetailActivity">
+
+        </activity>
+    </application>
+
+</manifest>

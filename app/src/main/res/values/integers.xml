@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="movies_list_span_count">2</integer>
+    <integer name="movie_poster_image_width">185</integer>
+    <integer name="movie_poster_image_height">275</integer>
+</resources>
