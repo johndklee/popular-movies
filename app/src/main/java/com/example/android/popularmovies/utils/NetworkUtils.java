@@ -14,18 +14,23 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
 
+/**
+ * NetworkUtils
+ *
+ * convenient ways to create URL and fetch JSONObject from APIs
+ */
 public class NetworkUtils {
 
     private static final String TAG = NetworkUtils.class.getSimpleName();
 
-    private static final String MDB_BASE_URL = "https://api.themoviedb.org/3/movie/";
+    private static final String MDB_BASE_URL = "https://api.themoviedb.org/3/movie";
 
     private static final String MDB_API_KEY_QP_KEY = "api_key";
     private static final String MDB_API_KEY_QP_VALUE = BuildConfig.MDB_APP_KEY;
 
     private static final String MDB_POPULAR_PATH = "popular";
     private static final String MDB_TOP_RATED_PATH = "top_rated";
-    private static final String MDB_MOVIE_PATH = "movie";
+
     private static final String MDB_VIDEOS_PATH = "videos";
     private static final String MDB_REVIEWS_PATH = "reviews";
 
@@ -74,11 +79,38 @@ public class NetworkUtils {
         Log.d(TAG, "buildTopRatedMoviesURL("+page+") called");
         URL url;
         try {
-            if (page < 0) page = 1;
+            if (page <= 0) page = 1;
             Uri uri = Uri.parse(MDB_BASE_URL).buildUpon()
                     .appendPath(MDB_TOP_RATED_PATH)
                     .appendQueryParameter(MDB_API_KEY_QP_KEY, MDB_API_KEY_QP_VALUE)
                     .appendQueryParameter(MDB_PAGE_QP_NAME, String.valueOf(page))
+                    .build();
+            url = new URL(uri.toString());
+        } catch (Throwable e) {
+            Log.e(TAG, "failed to build URL", e);
+            url = null;
+        }
+        Log.d(TAG, "returned "+url);
+        return url;
+    }
+
+    /**
+     * Build URL to fetch details of a movie
+     * https://developers.themoviedb.org/3/movies/get-movie-details
+     * Get Details
+     * GET /movie/{movie_id}
+     * Get the primary information about a movie.
+     *
+     * @param movie_id Movie ID
+     * @return URL for MDB API
+     */
+    public static URL buildMovieDetailsURL(String movie_id) {
+        Log.d(TAG, "buildMovieDetailsURL("+movie_id+") called");
+        URL url;
+        try {
+            Uri uri = Uri.parse(MDB_BASE_URL).buildUpon()
+                    .appendPath(movie_id)
+                    .appendQueryParameter(MDB_API_KEY_QP_KEY, MDB_API_KEY_QP_VALUE)
                     .build();
             url = new URL(uri.toString());
         } catch (Throwable e) {
@@ -99,13 +131,12 @@ public class NetworkUtils {
      * @param movie_id Movie ID
      * @return URL for MDB API
      */
-    public static URL buildMovieVideosURL(int movie_id) {
+    public static URL buildMovieVideosURL(String movie_id) {
         Log.d(TAG, "buildMovieVideosURL("+movie_id+") called");
         URL url;
         try {
             Uri uri = Uri.parse(MDB_BASE_URL).buildUpon()
-                    .appendPath(MDB_MOVIE_PATH)
-                    .appendPath(String.valueOf(movie_id))
+                    .appendPath(movie_id)
                     .appendPath(MDB_VIDEOS_PATH)
                     .appendQueryParameter(MDB_API_KEY_QP_KEY, MDB_API_KEY_QP_VALUE)
                     .build();
@@ -126,17 +157,19 @@ public class NetworkUtils {
      * Get the user reviews for a movie.
      *
      * @param movie_id Movie ID
+     * @param page Page ID
      * @return URL for MDB API
      */
-    public static URL buildMovieReviewsURL(int movie_id) {
-        Log.d(TAG, "buildMovieReviewsURL("+movie_id+") called");
+    public static URL buildMovieReviewsURL(String movie_id, int page) {
+        Log.d(TAG, "buildMovieReviewsURL("+movie_id+", "+page+") called");
         URL url;
         try {
+            if (page <= 0) page = 1;
             Uri uri = Uri.parse(MDB_BASE_URL).buildUpon()
-                    .appendPath(MDB_MOVIE_PATH)
-                    .appendPath(String.valueOf(movie_id))
+                    .appendPath(movie_id)
                     .appendPath(MDB_REVIEWS_PATH)
                     .appendQueryParameter(MDB_API_KEY_QP_KEY, MDB_API_KEY_QP_VALUE)
+                    .appendQueryParameter(MDB_PAGE_QP_NAME, String.valueOf(page))
                     .build();
             url = new URL(uri.toString());
         } catch (Throwable e) {

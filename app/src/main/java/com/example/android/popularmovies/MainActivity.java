@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
         if (result != null) {
             Intent intent = new Intent(this, MovieDetailActivity.class);
             // DONE: pass along data needed for Movie details UI
-            intent.putExtra("json", result.toString());
+            intent.putExtra("movie_id", result.getMovieID());
             startActivity(intent);
         } else {
             Log.d(TAG, "cannot load movie detail info");

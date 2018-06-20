@@ -31,7 +31,7 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
 
     private static final String TAG = MoviesAdapter.class.getSimpleName();
 
-    private final MainActivity mMain;
+    private final MainActivity mActivity;
     private final RecyclerView mMoviesList;
     private final MovieAdapterOnClickHandler mClickHandler;
     private final ArrayList<MovieListResult> mMovieListResults;
@@ -49,14 +49,14 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
     /**
      * Creates a MovieAdapter.
      *
-     * @param main      Used to talk to the UI and app resources
+     * @param activity     Used to talk to the UI and app resources
      * @param view         Used to get the target image size for poster
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
-    public MoviesAdapter(@NonNull MainActivity main, @NonNull RecyclerView view,
+    public MoviesAdapter(@NonNull MainActivity activity, @NonNull RecyclerView view,
                          @NonNull MovieAdapterOnClickHandler clickHandler) {
-        mMain = main;
+        mActivity = activity;
         mMoviesList = view;
         // detecting top most scroll so that we can trigger refresh
         mMoviesList.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -103,10 +103,6 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
         mSort = SHOW_MY_FAVORITES;
         loadNextPage();
     }
-
-//    public boolean isSortByPopularity() {
-//        return (mSort == SORT_BY_POPULARITY);
-//    }
 
     public boolean isSortByRating() {
         return (mSort == SORT_BY_RATING);
@@ -215,7 +211,7 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
     }
 
     private MainActivity getMainActivity() {
-        return mMain;
+        return mActivity;
     }
 
     static class MyAsyncTaskLoader extends AsyncTaskLoader<JSONObject> {

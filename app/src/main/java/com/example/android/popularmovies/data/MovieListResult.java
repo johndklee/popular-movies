@@ -6,7 +6,9 @@ public class MovieListResult {
 
     private static final String POSTER_PATH_PREFIX = "http://image.tmdb.org/t/p/w185";
 
+    public String movie_id;
     public String poster_path;
+    public String title;
     public String original_title;
     public String overview;
     public double vote_average;
@@ -18,6 +20,18 @@ public class MovieListResult {
 
     public MovieListResult(JSONObject jsonObject) {
         mJSONObject = jsonObject;
+    }
+
+    public String getMovieID() {
+        return movie_id;
+    }
+
+    public String getReleaseYear() {
+        return release_date.substring(0, 4);
+    }
+
+    public String getVoteAverageOutOf10() {
+        return vote_average+"/10";
     }
 
     public String getFullPosterPath() {

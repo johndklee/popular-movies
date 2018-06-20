@@ -38,6 +38,7 @@
             </intent-filter>
         </activity>
         <activity
+            android:label="@string/movie_detail_title"
             android:parentActivityName="com.example.android.popularmovies.MainActivity"
             android:name="com.example.android.popularmovies.MovieDetailActivity">
 
