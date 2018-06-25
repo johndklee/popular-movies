@@ -2,7 +2,6 @@ package com.example.android.popularmovies;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.ImageView;
 
 /**
  * A ViewHolder is a required part of the pattern for RecyclerViews. It mostly behaves as
@@ -15,8 +14,7 @@ class MovieVideosAdapterViewHolder extends RecyclerView.ViewHolder implements Vi
     MovieVideosAdapterViewHolder(View view, MovieVideosAdapterOnClickHandler clickHandler) {
         super(view);
         mClickHandler = clickHandler;
-        ImageView mVideoPlayButton = view.findViewById(R.id.video_play_button);
-        mVideoPlayButton.setOnClickListener(this);
+        view.setOnClickListener(this);
     }
 
     @Override

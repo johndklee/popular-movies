@@ -13,34 +13,35 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.data.MovieDetailsResult;
+import com.example.android.popularmovies.data.MovieDetailEntry;
 import com.example.android.popularmovies.utils.JSONUtils;
 import com.example.android.popularmovies.utils.NetworkUtils;
 import com.squareup.picasso.Picasso;
 
 import java.net.URL;
 
-class MovieDetailAdapter
-        implements LoaderManager.LoaderCallbacks<JSONObject> {
+class MovieDetailAdapter implements LoaderManager.LoaderCallbacks<JSONObject> {
 
     private static final String TAG = MovieDetailAdapter.class.getSimpleName();
 
     private static final int ID_MOVIE_DETAIL_LOADER = 45;
 
-    private final MovieDetailActivity mMovieDetailActivity;
+    private final MovieDetailAdapterUI mActivity;
 
     private String mMovieID;
-    MovieDetailAdapter(MovieDetailActivity movieDetailActivity) {
-        mMovieDetailActivity = movieDetailActivity;
+    private MovieDetailEntry mMovieDetailEntry;
+
+    MovieDetailAdapter(MovieDetailAdapterUI activity) {
+        mActivity = activity;
     }
 
-    public void setMovieID(String movie_id) {
-        mMovieID = movie_id;
+    public void loadMovieDetail(String movie_id) {
+        setMovieID(movie_id);
         loadData();
     }
 
     private void loadData() {
-        LoaderManager lm = getMovieDetailActivity().getSupportLoaderManager();
+        LoaderManager lm = getMovieDetailUI().getSupportLoaderManager();
         Loader l = lm.getLoader(ID_MOVIE_DETAIL_LOADER);
         if (l == null) {
             lm.initLoader(ID_MOVIE_DETAIL_LOADER, null, this);
@@ -49,6 +50,14 @@ class MovieDetailAdapter
         } else {
             Log.d(TAG, "wait for loader to finish");
         }
+    }
+
+    public MovieDetailEntry getMovieDetailEntry() {
+        return mMovieDetailEntry;
+    }
+
+    private void setMovieID(String movie_id) {
+        this.mMovieID = movie_id;
     }
 
     private String getMovieID() {
@@ -65,53 +74,52 @@ class MovieDetailAdapter
     @Override
     public void onLoadFinished(@NonNull Loader<JSONObject> loader, JSONObject json) {
         Log.d(TAG, "onLoadFinished called");
-        getMovieDetailActivity().hideProgressBar();
+        getMovieDetailUI().hideProgressBar();
         try {
             if (json == null) {
                 throw new Throwable("json object is null");
             }
             Log.d(TAG, "got "+json);
-            MovieDetailsResult mMovieDetailsResult = JSONUtils.createMovieDetailsResult(json, getMovieDetailActivity());
-            Log.d(TAG," = "+mMovieDetailsResult);
+            mMovieDetailEntry = JSONUtils.createMovieDetailsResult(json, getMovieDetailUI().getContext());
+            Log.d(TAG," = "+ mMovieDetailEntry);
 
-            String image_path = mMovieDetailsResult.getFullPosterPath();
-            ImageView image_view = getMovieDetailActivity().findViewById(R.id.movie_poster);
+            String image_path = mMovieDetailEntry.getFullPosterPath();
+            ImageView image_view = getMovieDetailUI().getActivity().findViewById(R.id.movie_poster);
             Picasso.get()
                     .load(image_path)
                     .placeholder(R.drawable.user_placeholder)
                     .error(R.drawable.user_placeholder_error)
                     .into(image_view);
 
-            TextView title = getMovieDetailActivity().findViewById(R.id.movie_title);
-            title.setText(mMovieDetailsResult.original_title);
+            TextView title = getMovieDetailUI().getActivity().findViewById(R.id.movie_title);
+            title.setText(mMovieDetailEntry.getOriginalTitle());
 
-            TextView movie_release_year = getMovieDetailActivity().findViewById(R.id.movie_release_year);
-            movie_release_year.setText(mMovieDetailsResult.getReleaseYear());
+            TextView movie_release_year = getMovieDetailUI().getActivity().findViewById(R.id.movie_release_year);
+            movie_release_year.setText(mMovieDetailEntry.getReleaseYear());
 
-            TextView overview = getMovieDetailActivity().findViewById(R.id.movie_overview);
-            overview.setText(mMovieDetailsResult.overview);
+            TextView overview = getMovieDetailUI().getActivity().findViewById(R.id.movie_overview);
+            overview.setText(mMovieDetailEntry.getOverview());
 
-            TextView movie_average_rating = getMovieDetailActivity().findViewById(R.id.movie_average_rating);
-            movie_average_rating.setText(mMovieDetailsResult.getVoteAverageOutOf10());
+            TextView movie_average_rating = getMovieDetailUI().getActivity().findViewById(R.id.movie_average_rating);
+            movie_average_rating.setText(mMovieDetailEntry.getVoteAverageOutOf10());
 
-            TextView movie_length_minutes = getMovieDetailActivity().findViewById(R.id.movie_length_minutes);
-            String min = getMovieDetailActivity().getResources().getString(R.string.movie_video_length);
-            Resources rs = mMovieDetailActivity.getResources();
-            movie_length_minutes.setText(rs.getString(R.string.movie_video_length,
-                    mMovieDetailsResult.getMovieLengthInMinutes()));
+            TextView movie_length_minutes = getMovieDetailUI().getActivity().findViewById(R.id.movie_length_minutes);
+            Resources rs = getMovieDetailUI().getContext().getResources();
+            String min = rs.getString(R.string.movie_video_length);
+            movie_length_minutes.setText(rs.getString(R.string.movie_video_length, mMovieDetailEntry.getRuntime()));
 
         } catch (Throwable e) {
             Log.e(TAG, "failed to load data", e);
         }
         if (json == null) {
-            getMovieDetailActivity().showErrorDisplay();
+            getMovieDetailUI().showErrorDisplay();
         } else {
-            getMovieDetailActivity().hideErrorDisplay();
+            getMovieDetailUI().hideErrorDisplay();
         }
     }
 
-    private MovieDetailActivity getMovieDetailActivity() {
-        return mMovieDetailActivity;
+    private MovieDetailAdapterUI getMovieDetailUI() {
+        return mActivity;
     }
 
     @Override
@@ -123,14 +131,14 @@ class MovieDetailAdapter
         private final MovieDetailAdapter mAdapter;
 
         MyAsyncTaskLoader(MovieDetailAdapter adapter) {
-            super(adapter.getMovieDetailActivity());
+            super(adapter.getMovieDetailUI().getContext());
             mAdapter = adapter;
         }
 
         @Override
         protected void onStartLoading() {
             Log.d(TAG, "onStartLoading called");
-            mAdapter.getMovieDetailActivity().showProgressBar();
+            mAdapter.getMovieDetailUI().showProgressBar();
             forceLoad();
         }
 
@@ -142,7 +150,7 @@ class MovieDetailAdapter
             URL url = null;
             try {
                 url = NetworkUtils.buildMovieDetailsURL(mAdapter.getMovieID());
-                if (NetworkUtils.isOnline(mAdapter.getMovieDetailActivity())) {
+                if (NetworkUtils.isOnline(mAdapter.getMovieDetailUI().getContext())) {
                     String jsonString = NetworkUtils.getResponseFromHttpUrl(url);
                     json = new JSONObject(jsonString);
                 } else {

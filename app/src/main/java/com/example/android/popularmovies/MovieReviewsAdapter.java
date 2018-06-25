@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.data.MovieReviewsResult;
+import com.example.android.popularmovies.data.MovieReviewEntry;
 import com.example.android.popularmovies.utils.JSONUtils;
 import com.example.android.popularmovies.utils.NetworkUtils;
 
@@ -28,9 +28,9 @@ class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapterViewHo
 
     private static final String TAG = MoviesAdapter.class.getSimpleName();
 
-    private final MovieDetailActivity mActivity;
+    private final DetailActivity mActivity;
     private final MovieReviewsAdapterOnClickHandler mClickHandler;
-    private final ArrayList<MovieReviewsResult> mMovieReviews;
+    private final ArrayList<MovieReviewEntry> mMovieReviews;
 
     private static final int ID_MOVIE_REVIEWS_LOADER = 47;
 
@@ -47,8 +47,8 @@ class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapterViewHo
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
-    public MovieReviewsAdapter(@NonNull MovieDetailActivity activity, @NonNull RecyclerView view,
-                              @NonNull MovieReviewsAdapterOnClickHandler clickHandler) {
+    public MovieReviewsAdapter(@NonNull DetailActivity activity, @NonNull RecyclerView view,
+                               @NonNull MovieReviewsAdapterOnClickHandler clickHandler) {
         mActivity = activity;
         mClickHandler = clickHandler;
         mMovieReviews = new ArrayList<>();
@@ -105,19 +105,19 @@ class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapterViewHo
         Log.d(TAG, "onBindViewHolder called for "+position);
         String image_path = null;
         try {
-            MovieReviewsResult result = mMovieReviews.get(position);
+            MovieReviewEntry result = mMovieReviews.get(position);
             if (result != null) {
                 TextView review_author = holder.itemView.findViewById(R.id.review_author);
-                review_author.setText(result.review_author);
+                review_author.setText(result.getReviewAuthor());
                 TextView review_content = holder.itemView.findViewById(R.id.review_content);
-                review_content.setText(result.review_content);
+                review_content.setText(result.getReviewContent());
             }
         } catch (Throwable e) {
             Log.d(TAG, "failed to get review result", e);
         }
     }
 
-    public MovieReviewsResult getMovieReviewsResult(int position) {
+    public MovieReviewEntry getMovieReviewsResult(int position) {
         return mMovieReviews.get(position);
     }
 
@@ -130,7 +130,7 @@ class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapterViewHo
         mMovieReviews.clear();
     }
 
-    private void add(MovieReviewsResult result) {
+    private void add(MovieReviewEntry result) {
         mMovieReviews.add(result);
     }
 
@@ -154,7 +154,7 @@ class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapterViewHo
         return new MyAsyncTaskLoader(this);
     }
 
-    private MovieDetailActivity getMovieDetailActivity() {
+    private DetailActivity getMovieDetailActivity() {
         return mActivity;
     }
 
@@ -216,7 +216,7 @@ class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapterViewHo
             JSONArray results = json.optJSONArray("results");
             for (int i = 0; i < results.length(); i++) {
                 JSONObject jsonObject = results.optJSONObject(i);
-                MovieReviewsResult result = JSONUtils.createMovieReviewsResult(jsonObject, getMovieDetailActivity());
+                MovieReviewEntry result = JSONUtils.createMovieReviewsResult(mMovieID, jsonObject, getMovieDetailActivity());
                 add(result);
             }
         } catch (Throwable e) {

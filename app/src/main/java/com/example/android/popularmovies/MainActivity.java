@@ -1,6 +1,8 @@
 package com.example.android.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,17 +15,21 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.data.MovieListResult;
+import com.example.android.popularmovies.data.MovieListItemEntry;
+import com.example.android.popularmovies.data.MovieListType;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity
+        implements MoviesAdapterOnClickHandler, MoviesAdapterUI {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final String SORT_BY_RATING = "sort_by_rating";
+    // key for saving to instance state
+    private static final String MOVIE_LIST_TYPE = "movie_list_type";
 
+    private RecyclerView mMovieList;
     private ProgressBar mProgressBar;
     private TextView mErrorDisplay;
-    private RecyclerView mMoviesList;
+
     private MoviesAdapter mMoviesAdapter;
 
     @Override
@@ -31,28 +37,27 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mMovieList = findViewById(R.id.movie_list);
         mProgressBar = findViewById(R.id.pb_loading_indicator);
         mErrorDisplay = findViewById(R.id.tv_error_display);
 
-        mMoviesList = findViewById(R.id.movies_list);
-        mMoviesList.setHasFixedSize(true);
+        // setup layout manager for recycler view
         int mSpanCount = getResources().getInteger(R.integer.movies_list_span_count);
         GridLayoutManager layoutManager =
                 new GridLayoutManager(this, mSpanCount, GridLayoutManager.VERTICAL, false);
-        mMoviesList.setLayoutManager(layoutManager);
-        mMoviesAdapter = new MoviesAdapter(this, mMoviesList, this);
-        mMoviesList.setAdapter(mMoviesAdapter);
+        mMovieList.setHasFixedSize(true);
+        mMovieList.setLayoutManager(layoutManager);
 
+        // setup data adapter for recycler view
+        mMoviesAdapter = new MoviesAdapter(this, mMovieList, this);
         // retrieve sort by setting from saved instance state if available
-        boolean sort_by_rating = false;
+        String list_type = MovieListType.SORT_BY_POPULARITY;
         if (savedInstanceState != null) {
-            sort_by_rating = savedInstanceState.getBoolean(SORT_BY_RATING, false);
+            list_type = savedInstanceState.getString(MOVIE_LIST_TYPE, MovieListType.SORT_BY_POPULARITY);
         }
-        if (sort_by_rating) {
-            mMoviesAdapter.loadSortByRating();
-        } else {
-            mMoviesAdapter.loadSortByPopularity();
-        }
+        mMoviesAdapter.setListType(list_type);
+        mMovieList.setAdapter(mMoviesAdapter);
+
     }
 
     /**
@@ -61,47 +66,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
      */
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean(SORT_BY_RATING, mMoviesAdapter.isSortByRating());
+        outState.putString(MOVIE_LIST_TYPE, mMoviesAdapter.getListType());
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onClick(int position) {
-        Log.d(TAG, "clicked position="+position);
-        MovieListResult result = mMoviesAdapter.getMovieListResult(position);
-        if (result != null) {
-            Intent intent = new Intent(this, MovieDetailActivity.class);
-            // DONE: pass along data needed for Movie details UI
-            intent.putExtra("movie_id", result.getMovieID());
-            startActivity(intent);
-        } else {
-            Log.d(TAG, "cannot load movie detail info");
-        }
-    }
-
-    public void showErrorDisplay() {
-        mProgressBar.setVisibility(View.INVISIBLE);
-        mMoviesList.setVisibility(View.INVISIBLE);
-        mErrorDisplay.setVisibility(View.VISIBLE);
-        mErrorDisplay.setText(R.string.api_error);
-    }
-
-    public void hideErrorDisplay() {
-        mProgressBar.setVisibility(View.INVISIBLE);
-        mErrorDisplay.setVisibility(View.INVISIBLE);
-        mMoviesList.setVisibility(View.VISIBLE);
-    }
-
-    public void showProgressBar() {
-        mErrorDisplay.setVisibility(View.INVISIBLE);
-        mMoviesList.setVisibility(View.INVISIBLE);
-        mProgressBar.setVisibility(View.VISIBLE);
-    }
-
-    public void hideProgressBar() {
-        mErrorDisplay.setVisibility(View.INVISIBLE);
-        mProgressBar.setVisibility(View.INVISIBLE);
-        mMoviesList.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -141,17 +107,72 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
 
         switch(id) {
             case R.id.menu_item_sort_by_popularity:
-                mMoviesAdapter.loadSortByPopularity();
+                mMoviesAdapter.setListType(MovieListType.SORT_BY_POPULARITY);
                 return true;
             case R.id.menu_item_sort_by_rating:
-                mMoviesAdapter.loadSortByRating();
+                mMoviesAdapter.setListType(MovieListType.SORT_BY_RATING);
                 return true;
             case R.id.menu_item_show_my_favorites:
-                mMoviesAdapter.loadMyFavorites();
+                mMoviesAdapter.setListType(MovieListType.SHOW_MY_FAVORITES);
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Clicked on one of movie thumbnails displayed in recycler view
+     * @param position Position of thumbnail clicked
+     */
+    @Override
+    public void onClick(int position) {
+        Log.d(TAG, "clicked position="+position);
+        MovieListItemEntry result = mMoviesAdapter.getMovieListItemAtPosition(position);
+        if (result != null) {
+            Intent intent = new Intent(this, DetailActivity.class);
+            // DONE: pass along data needed for Movie details UI
+            intent.putExtra("movie_id", result.getMovieID());
+            startActivity(intent);
+        } else {
+            Log.d(TAG, "cannot load movie detail info");
+        }
+    }
+
+    @Override
+    public void showErrorDisplay() {
+        mProgressBar.setVisibility(View.INVISIBLE);
+        mMovieList.setVisibility(View.INVISIBLE);
+
+        mErrorDisplay.setVisibility(View.VISIBLE);
+        mErrorDisplay.setText(R.string.api_error);
+    }
+
+    @Override
+    public void showResult() {
+        mProgressBar.setVisibility(View.INVISIBLE);
+        mErrorDisplay.setVisibility(View.INVISIBLE);
+
+        mMovieList.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void showProgressBar() {
+        mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideProgressBar() {
+        mProgressBar.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public LoaderManager getSupportLoaderManager() {
+        return super.getSupportLoaderManager();
     }
 
 }

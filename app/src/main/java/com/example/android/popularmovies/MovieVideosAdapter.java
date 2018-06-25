@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.data.MovieVideosResult;
+import com.example.android.popularmovies.data.MovieVideoEntry;
 import com.example.android.popularmovies.utils.JSONUtils;
 import com.example.android.popularmovies.utils.NetworkUtils;
 
@@ -28,9 +28,9 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
 
     private static final String TAG = MoviesAdapter.class.getSimpleName();
 
-    private final MovieDetailActivity mActivity;
+    private final MovieDetailAdapterUI mActivity;
     private final MovieVideosAdapterOnClickHandler mClickHandler;
-    private final ArrayList<MovieVideosResult> mMovieVideos;
+    private final ArrayList<MovieVideoEntry> mMovieVideos;
 
     private static final int ID_MOVIE_VIDEOS_LOADER = 46;
 
@@ -44,8 +44,8 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
-    MovieVideosAdapter(@NonNull MovieDetailActivity activity, @NonNull RecyclerView view,
-                         @NonNull MovieVideosAdapterOnClickHandler clickHandler) {
+    MovieVideosAdapter(@NonNull DetailActivity activity, @NonNull RecyclerView view,
+                       @NonNull MovieVideosAdapterOnClickHandler clickHandler) {
         mActivity = activity;
         mClickHandler = clickHandler;
         mMovieVideos = new ArrayList<>();
@@ -56,7 +56,7 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
 
         clear();
 
-        LoaderManager lm = getMovieDetailActivity().getSupportLoaderManager();
+        LoaderManager lm = getUI().getSupportLoaderManager();
         Loader l = lm.getLoader(ID_MOVIE_VIDEOS_LOADER);
         if (l == null) {
             lm.initLoader(ID_MOVIE_VIDEOS_LOADER, null, this);
@@ -71,7 +71,7 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
     @NonNull
     @Override
     public MovieVideosAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(getMovieDetailActivity()).inflate(R.layout.movie_video_line_item, parent, false);
+        View view = LayoutInflater.from(getUI().getContext()).inflate(R.layout.movie_video_line_item, parent, false);
         view.setFocusable(true);
         return new MovieVideosAdapterViewHolder(view, mClickHandler);
     }
@@ -80,17 +80,15 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
     public void onBindViewHolder(@NonNull MovieVideosAdapterViewHolder holder, int position) {
         Log.d(TAG, "onBindViewHolder called for "+position);
         try {
-            MovieVideosResult result = mMovieVideos.get(position);
-            if (result != null) {
-                TextView video_title = holder.itemView.findViewById(R.id.video_title);
-                video_title.setText(result.getVideoName());
-            }
+            MovieVideoEntry result = mMovieVideos.get(position);
+            TextView video_title = holder.itemView.findViewById(R.id.video_title);
+            video_title.setText(result.getVideoName());
         } catch (Throwable e) {
             Log.d(TAG, "failed to get video result", e);
         }
     }
 
-    public MovieVideosResult getMovieVideosResult(int position) {
+    public MovieVideoEntry getMovieVideosResult(int position) {
         return mMovieVideos.get(position);
     }
 
@@ -103,7 +101,7 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
         mMovieVideos.clear();
     }
 
-    private void add(MovieVideosResult result) {
+    private void add(MovieVideoEntry result) {
         mMovieVideos.add(result);
     }
 
@@ -123,7 +121,7 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
         return new MyAsyncTaskLoader(this);
     }
 
-    private MovieDetailActivity getMovieDetailActivity() {
+    private MovieDetailAdapterUI getUI() {
         return mActivity;
     }
 
@@ -131,14 +129,14 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
         private final MovieVideosAdapter mAdapter;
 
         MyAsyncTaskLoader(MovieVideosAdapter adapter) {
-            super(adapter.getMovieDetailActivity());
+            super(adapter.getUI().getContext());
             mAdapter = adapter;
         }
 
         @Override
         protected void onStartLoading() {
             Log.d(TAG, "onStartLoading called");
-            mAdapter.getMovieDetailActivity().showProgressBar();
+            mAdapter.getUI().showProgressBar();
             forceLoad();
         }
 
@@ -150,7 +148,7 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
             URL url = null;
             try {
                 url = NetworkUtils.buildMovieVideosURL(mAdapter.getMovieID());
-                if (NetworkUtils.isOnline(mAdapter.getMovieDetailActivity())) {
+                if (NetworkUtils.isOnline(mAdapter.getUI().getContext())) {
                     String jsonString = NetworkUtils.getResponseFromHttpUrl(url);
                     json = new JSONObject(jsonString);
                 } else {
@@ -174,7 +172,7 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
     @Override
     public void onLoadFinished(@NonNull Loader<JSONObject> loader, JSONObject json) {
         Log.d(TAG, "onLoadFinished called");
-        getMovieDetailActivity().hideProgressBar();
+        getUI().hideProgressBar();
         try {
             if (json == null) {
                 throw new Throwable("json object is null");
@@ -184,16 +182,18 @@ class MovieVideosAdapter extends RecyclerView.Adapter<MovieVideosAdapterViewHold
             mActivity.setVideoCount(results.length());
             for (int i = 0; i < results.length(); i++) {
                 JSONObject jsonObject = results.optJSONObject(i);
-                MovieVideosResult result = JSONUtils.createMovieVideosResult(jsonObject, getMovieDetailActivity());
+                MovieVideoEntry result = JSONUtils.createMovieVideosResult(mMovieID, jsonObject, getUI().getContext());
+                Log.d(TAG, "adding #"+i+": "+result);
                 add(result);
             }
+            Log.d(TAG, "item count = "+getItemCount());
         } catch (Throwable e) {
             Log.e(TAG, "failed to load data", e);
         }
         if (json == null) {
-            getMovieDetailActivity().showErrorDisplay();
+            getUI().showErrorDisplay();
         } else {
-            getMovieDetailActivity().hideErrorDisplay();
+            getUI().hideErrorDisplay();
             notifyDataSetChanged();
         }
     }
