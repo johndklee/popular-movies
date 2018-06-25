@@ -16,9 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.example.android.popularmovies.data.AppDatabase;
 import com.example.android.popularmovies.data.MovieListItemEntry;
-
 import com.example.android.popularmovies.data.MovieListType;
 import com.example.android.popularmovies.utils.JSONUtils;
 import com.example.android.popularmovies.utils.NetworkUtils;
@@ -41,6 +39,7 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
     private final MoviesAdapterOnClickHandler mClickHandler;
 
     private List<MovieListItemEntry> mMovieListItems;
+    private List<MovieListItemEntry> mFavoriteMovieListItems;
 
     // loader id
     private static final int ID_MOVIES_LOADER = 44;
@@ -81,6 +80,15 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
 
         mClickHandler = clickHandler;
         mListType = MovieListType.SORT_BY_POPULARITY;
+    }
+
+    public void setMyFavoriteMovieListItems(List<MovieListItemEntry> result) {
+        Log.d(TAG, "setMyFavoriteMovieListItems called "+result);
+        mFavoriteMovieListItems = result;
+        if (MovieListType.SHOW_MY_FAVORITES.equals(mListType)) {
+            mMovieListItems = new ArrayList<>(mFavoriteMovieListItems);
+            notifyDataSetChanged();
+        }
     }
 
     public void setListType(String list_type) {
@@ -154,9 +162,14 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
         }
         if (!TextUtils.isEmpty(image_path)) {
             Resources resources = getUI().getContext().getResources();
+
             int targetWidth = mRecyclerView.getWidth() / resources.getInteger(R.integer.movies_list_span_count);
             int targetHeight = targetWidth * resources.getInteger(R.integer.movie_poster_image_height)
                     / resources.getInteger(R.integer.movie_poster_image_width);
+            Log.d(TAG, "thumbnail width="+targetWidth+" height="+targetHeight);
+            if (targetWidth <= 0) targetWidth = 320;
+            if (targetHeight <= 0) targetHeight = 475;
+
             ImageView movie_image_view = holder.itemView.findViewById(R.id.movie_image_view);
             Picasso.get()
                     .load(image_path)
@@ -239,7 +252,7 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
         @Override
         public List<MovieListItemEntry> loadInBackground() {
             Log.d(TAG, "loadInBackground called");
-            List<MovieListItemEntry> list;
+            List<MovieListItemEntry> list = null;
             URL url = null;
             int page;
             JSONObject json;
@@ -249,13 +262,12 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapterViewHolder>
                 }
                 switch (mAdapter.getListType()) {
                     case MovieListType.SHOW_MY_FAVORITES:
-                        AppDatabase db = AppDatabase.getInstance(getContext());
-                        mAdapter.mPage = 1;
-                        mAdapter.mTotalPages = 1;
-                        list = db.movieListItemDao().loadMovieListItemsByMovieListType(MovieListType.SHOW_MY_FAVORITES);
+                        Log.d(TAG, "loading my favorites");
+                        if (mAdapter.mFavoriteMovieListItems != null) {
+                            list = new ArrayList<>(mAdapter.mFavoriteMovieListItems);
+                        }
                         break;
                     case MovieListType.SORT_BY_POPULARITY:
-                    default:
                         url = NetworkUtils.buildPopularMoviesURL(mAdapter.getPageID());
                         json = new JSONObject(NetworkUtils.getResponseFromHttpUrl(url));
                         page = json.optInt("page");

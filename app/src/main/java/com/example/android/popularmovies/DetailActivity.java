@@ -1,8 +1,11 @@
 package com.example.android.popularmovies;
 
 import android.app.Activity;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -138,13 +141,13 @@ public class DetailActivity extends AppCompatActivity
     private void loadFavoriteStatus(final String movie_id) {
         Log.d(TAG, "load favorite status");
         if (!TextUtils.isEmpty(movie_id)) {
-            AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            AppDatabase db = AppDatabase.getInstance(DetailActivity.this);
+            Log.d(TAG, "get "+movie_id);
+            LiveData<List<MovieListItemEntry>> result = db.movieListItemDao().findMovieItemByPKs(MovieListType.SHOW_MY_FAVORITES, movie_id);
+            result.observe(this, new Observer<List<MovieListItemEntry>>() {
                 @Override
-                public void run() {
-                    AppDatabase db = AppDatabase.getInstance(DetailActivity.this);
-                    Log.d(TAG, "get "+movie_id);
-                    List<MovieListItemEntry> result = db.movieListItemDao().findMovieItemByPKs(MovieListType.SHOW_MY_FAVORITES, movie_id);
-                    final boolean isChecked = (result != null && !result.isEmpty());
+                public void onChanged(@Nullable List<MovieListItemEntry> movieListItemEntries) {
+                    final boolean isChecked = (movieListItemEntries != null && !movieListItemEntries.isEmpty());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

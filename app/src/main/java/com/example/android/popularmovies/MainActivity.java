@@ -1,7 +1,10 @@
 package com.example.android.popularmovies;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,6 +20,8 @@ import android.widget.TextView;
 
 import com.example.android.popularmovies.data.MovieListItemEntry;
 import com.example.android.popularmovies.data.MovieListType;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements MoviesAdapterOnClickHandler, MoviesAdapterUI {
@@ -58,6 +63,19 @@ public class MainActivity extends AppCompatActivity
         mMoviesAdapter.setListType(list_type);
         mMovieList.setAdapter(mMoviesAdapter);
 
+        setupViewModel();
+
+    }
+
+    private void setupViewModel() {
+        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        viewModel.getMyFavoriteMovieListItems().observe(this, new Observer<List<MovieListItemEntry>>() {
+            @Override
+            public void onChanged(@Nullable List<MovieListItemEntry> entries) {
+                Log.d(TAG, "Updating list of my favorites from LiveData in ViewModel");
+                mMoviesAdapter.setMyFavoriteMovieListItems(entries);
+            }
+        });
     }
 
     /**
